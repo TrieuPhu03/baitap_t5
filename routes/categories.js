@@ -1,7 +1,7 @@
 var express = require('express');
 const { ConnectionCheckOutFailedEvent } = require('mongodb');
 var router = express.Router();
-let productModel = require('../schemas/product')
+let categoryModel = require('../schemas/category')
 
 function buildQuery(obj) {
     console.log(obj);
@@ -9,39 +9,23 @@ function buildQuery(obj) {
     if (obj.name) {
         result.name = new RegExp(obj.name, 'i');
     }
-    result.price = {};
-    if (obj.price) {
-        if (obj.price.$gte) {
-            result.price.$gte = obj.price.$gte;
-        } else {
-            result.price.$gte = 0
-        }
-        if (obj.price.$lte) {
-            result.price.$lte = obj.price.$lte;
-        } else {
-            result.price.$lte = 10000;
-        }
-
-    }
     return result;
 }
 
 /* GET users listing. */
 router.get('/', async function (req, res, next) {
-
-
-    let productsQuery = await productModel.find(buildQuery(req.query));
-    const products = productsQuery.filter(product => !product.isDeleted);
+    let categoriesQuery = await categoryModel.find(buildQuery(req.query));
+    const categories = categoriesQuery.filter(category => !category.isDeleted);
     res.status(200).send({
         success: true,
-        data: products
+        data: categories
     });
 });
 router.get('/:id', async function (req, res, next) {
     try {
         let id = req.params.id;
-        let product = await productModel.findById(id);
-        if (product.isDeleted) {
+        let category = await categoryModel.findById(id);
+        if (category.isDeleted) {
             return res.status(404).send({
                 success: false,
                 message: "khong co id phu hop"
@@ -49,7 +33,7 @@ router.get('/:id', async function (req, res, next) {
         }
         res.status(200).send({
             success: true,
-            data: product
+            data: category
         });
     } catch (error) {
         res.status(404).send({
@@ -61,17 +45,14 @@ router.get('/:id', async function (req, res, next) {
 
 router.post('/', async function (req, res, next) {
     try {
-        let newProduct = new productModel({
+        let newCategory = new categoryModel({
             name: req.body.name,
-            price: req.body.price,
-            description: req.body.description,
-            quantity: req.body.quantity,
-            category: req.body.category
+            description: req.body.description
         })
-        await newProduct.save();
+        await newCategory.save();
         res.status(200).send({
             success: true,
-            data: newProduct
+            data: newCategory
         });
     } catch (error) {
         res.status(404).send({
@@ -84,29 +65,25 @@ router.put('/:id', async function (req, res, next) {
 
     try {
         let id = req.params.id;
-        let product = await productModel.findById(id);
-        if (!product) {
+        let category = await categoryModel.findById(id);
+        if (!category) {
             return res.status(404).send({
                 success: false,
                 message: "khong co id phu hop"
             });
         }
-        if (product.isDeleted) {
+        if (category.isDeleted) {
             return res.status(404).send({
                 success: false,
                 message: "khong co id phu hop"
             });
         }
-        product.name = req.body.name;
-        product.price = req.body.price;
-        product.description = req.body.description;
-        product.imgURL = req.body.imgURL;
-        product.quantity = req.body.quantity;
-        product.category = req.body.category;
-        await product.save();
+        category.name = req.body.name;
+        category.description = req.body.description;
+        await category.save();
         res.status(200).send({
             success: true,
-            data: product
+            data: category
         });
     } catch (error) {
         res.status(404).send({
@@ -118,12 +95,12 @@ router.put('/:id', async function (req, res, next) {
 router.delete('/:id', async function (req, res, next) {
     try {
         let id = req.params.id;
-        let product = await productModel.findById(id);
-        product.isDeleted = true;
-        await product.save();
+        let category = await categoryModel.findById(id);
+        category.isDeleted = true;
+        await category.save();
         res.status(200).send({
             success: true,
-            data: product
+            data: category
         });
     } catch (error) {
         res.status(404).send({
